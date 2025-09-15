@@ -1,16 +1,19 @@
-import os
-import gdown
-import numpy as np
-import tensorflow as tf
-from PIL import Image
 import streamlit as st
+import tensorflow as tf
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import InputLayer
+import numpy as np
+from PIL import Image
+import gdown
+import os
 
-# Constants
-MODEL_FILE = "my_cnn_model_v3.keras"
-GOOGLE_DRIVE_FILE_ID = "1IDw8g1dZps0LwDQBn_j_DjJLjcYywqgI"
-MODEL_SAVE_PATH = "/content/drive/MyDrive/my_cnn_model_v3.keras"
+# -----------------------------
+# Config
+# -----------------------------
+OLD_MODEL_FILE = "my_cnn_model.keras"  # Old Keras 2 model
+MODEL_FILE = "/content/drive/MyDrive/my_cnn_model_v3.keras"  # Converted Keras 3 model
+GOOGLE_DRIVE_FILE_ID = "19ondqnTkzrM07XS1TCtLxuE44fE7BdYC"
 
-# Class names
 CLASS_NAMES = [
     "Augmented Banana Black Sigatoka Disease",
     "Augmented Banana Bract Mosaic Virus Disease",
@@ -21,47 +24,70 @@ CLASS_NAMES = [
     "Augmented Banana Yellow Sigatoka Disease"
 ]
 
-# Function to download model if not exists
-def download_model():
-    if not os.path.exists(MODEL_FILE):
-        st.info("Downloading model...")
-        url = f"https://drive.google.com/uc?export=download&id={GOOGLE_DRIVE_FILE_ID}"
-        gdown.download(url, MODEL_FILE, quiet=False, fuzzy=True)
-        st.success("Model downloaded successfully!")
+# -----------------------------
+# Mount Google Drive (if using Colab)
+# -----------------------------
+from google.colab import drive
+drive.mount('/content/drive')
 
-# Function to load the model
-def load_model():
-    try:
-        model = tf.keras.models.load_model(MODEL_FILE)
-        st.success("Model loaded successfully!")
-        return model
-    except Exception as e:
-        st.error(f"Failed to load model. Error: {e}")
-        return None
+# -----------------------------
+# Download old model if it doesn't exist
+# -----------------------------
+if not os.path.exists(OLD_MODEL_FILE):
+    st.info("Downloading old Keras 2 model...")
+    url = f"https://drive.google.com/uc?export=download&id={GOOGLE_DRIVE_FILE_ID}"
+    gdown.download(url, OLD_MODEL_FILE, quiet=False, fuzzy=True)
 
+# -----------------------------
+# Convert model to Keras 3 if needed
+# -----------------------------
+if not os.path.exists(MODEL_FILE):
+    st.info("Converting model to Keras 3 format...")
+    old_model = tf.keras.models.load_model(OLD_MODEL_FILE)
+
+    new_model = Sequential()
+    for layer in old_model.layers:
+        if isinstance(layer, InputLayer):
+            new_model.add(tf.keras.Input(shape=layer.input_shape[1:]))
+        else:
+            layer_config = layer.get_config()
+            layer_class = layer.__class__
+            new_layer = layer_class.from_config(layer_config)
+            new_model.add(new_layer)
+
+    new_model.save(MODEL_FILE)
+    st.success(f"Model converted and saved to Drive: {MODEL_FILE}")
+
+# -----------------------------
+# Load Keras 3 model
+# -----------------------------
+try:
+    model = tf.keras.models.load_model(MODEL_FILE)
+    st.success("Model loaded successfully!")
+except Exception as e:
+    st.error(f"Failed to load model. Error: {e}")
+    st.stop()
+
+# -----------------------------
 # Streamlit UI
+# -----------------------------
 st.title("🍌 Banana Leaf Disease Classifier")
 st.write("Upload a banana leaf image and get a disease prediction.")
 
-# Upload image
 uploaded_file = st.file_uploader("Choose a banana leaf image...", type=["jpg", "jpeg", "png"])
 
 if uploaded_file is not None:
     image = Image.open(uploaded_file).convert("RGB")
     st.image(image, caption="Uploaded Image", use_column_width=True)
 
-    # Preprocess image
-    img_size = (224, 224)
-    img_array = np.array(image.resize(img_size)) / 255.0
+    img_array = np.array(image.resize((224, 224))) / 255.0
     img_array = np.expand_dims(img_array, axis=0)
 
-    # Load model and predict
-    download_model()
-    model = load_model()
-    if model:
-        predictions = model.predict(img_array)
-        score = tf.nn.softmax(predictions[0])
+    predictions = model.predict(img_array)
+    score = tf.nn.softmax(predictions[0])
 
-        st.subheader("Prediction")
-        st.write(f"**Class:** {CLASS_NAMES[np.argmax(score)]}")
-        st.write(f"**Confidence:** {100 * np.max(score):.2f}%")
+    st.subheader("Prediction")
+    st.write(f"**Class:** {CLASS_NAMES[np.argmax(score)]}")
+    st.write(f"**Confidence:** {100 * np.max(score):.2f}%")
+
+
