@@ -2,3 +2,6 @@ streamlit==1.39.0
 tensorflow==2.15.0
 pillow==10.4.0
 numpy==1.26.4
+gdown==5.2.0
+
+
