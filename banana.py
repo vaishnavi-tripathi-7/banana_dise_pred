@@ -8,7 +8,7 @@ import os
 # Download model if it doesn't exist
 model_path = "my_cnn_model.keras"
 if not os.path.exists(model_path):
-    url = "https://drive.google.com/file/d/1SKoJJGjEwTn0yjFBhKVUX4KtNCJeFbwu/view?usp=sharing"
+    url = "https://drive.google.com/file/d/19ondqnTkzrM07XS1TCtLxuE44fE7BdYC/view?usp=drive_link"
     gdown.download(url, model_path, quiet=False)
 
 # Load model
@@ -45,5 +45,6 @@ if uploaded_file is not None:
     st.subheader("Prediction")
     st.write(f"**Class:** {CLASS_NAMES[np.argmax(score)]}")
     st.write(f"**Confidence:** {100 * np.max(score):.2f}%")
+
 
 
