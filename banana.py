@@ -1,7 +1,5 @@
 import streamlit as st
 import tensorflow as tf
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import InputLayer
 import numpy as np
 from PIL import Image
 import gdown
@@ -10,9 +8,8 @@ import os
 # -----------------------------
 # Config
 # -----------------------------
-OLD_MODEL_FILE = "my_cnn_model.keras"  # Old Keras 2 model
-MODEL_FILE = "/content/drive/MyDrive/my_cnn_model_v3.keras"  # Converted Keras 3 model
-GOOGLE_DRIVE_FILE_ID = "19ondqnTkzrM07XS1TCtLxuE44fE7BdYC"
+MODEL_FILE = "my_cnn_model_v3.keras"  # Keras 3 model
+GOOGLE_DRIVE_FILE_ID = "1IDw8g1dZps0LwDQBn_j_DjJLjcYywqgI"
 
 CLASS_NAMES = [
     "Augmented Banana Black Sigatoka Disease",
@@ -25,41 +22,15 @@ CLASS_NAMES = [
 ]
 
 # -----------------------------
-# Mount Google Drive (if using Colab)
-# -----------------------------
-from google.colab import drive
-drive.mount('/content/drive')
-
-# -----------------------------
-# Download old model if it doesn't exist
-# -----------------------------
-if not os.path.exists(OLD_MODEL_FILE):
-    st.info("Downloading old Keras 2 model...")
-    url = f"https://drive.google.com/uc?export=download&id={GOOGLE_DRIVE_FILE_ID}"
-    gdown.download(url, OLD_MODEL_FILE, quiet=False, fuzzy=True)
-
-# -----------------------------
-# Convert model to Keras 3 if needed
+# Download model if it doesn't exist
 # -----------------------------
 if not os.path.exists(MODEL_FILE):
-    st.info("Converting model to Keras 3 format...")
-    old_model = tf.keras.models.load_model(OLD_MODEL_FILE)
-
-    new_model = Sequential()
-    for layer in old_model.layers:
-        if isinstance(layer, InputLayer):
-            new_model.add(tf.keras.Input(shape=layer.input_shape[1:]))
-        else:
-            layer_config = layer.get_config()
-            layer_class = layer.__class__
-            new_layer = layer_class.from_config(layer_config)
-            new_model.add(new_layer)
-
-    new_model.save(MODEL_FILE)
-    st.success(f"Model converted and saved to Drive: {MODEL_FILE}")
+    st.info("Downloading model...")
+    url = f"https://drive.google.com/uc?export=download&id={GOOGLE_DRIVE_FILE_ID}"
+    gdown.download(url, MODEL_FILE, quiet=False, fuzzy=True)
 
 # -----------------------------
-# Load Keras 3 model
+# Load model
 # -----------------------------
 try:
     model = tf.keras.models.load_model(MODEL_FILE)
@@ -89,5 +60,6 @@ if uploaded_file is not None:
     st.subheader("Prediction")
     st.write(f"**Class:** {CLASS_NAMES[np.argmax(score)]}")
     st.write(f"**Confidence:** {100 * np.max(score):.2f}%")
+
 
 
