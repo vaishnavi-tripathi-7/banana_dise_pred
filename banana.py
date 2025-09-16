@@ -8,7 +8,7 @@ import os
 # -----------------------------
 # Config: Model file and Drive ID
 # -----------------------------
-MODEL_FILE = "my_cnn_model_v3.keras"
+MODEL_FILE = "finalbanana.keras"
 GOOGLE_DRIVE_FILE_ID = "1oEORySLbrQMgPpl8JbPlJK6IZ50E66eR"  # Updated Drive file ID
 
 # -----------------------------
@@ -67,3 +67,4 @@ if uploaded_file is not None:
     st.subheader("Prediction")
     st.write(f"**Class:** {CLASS_NAMES[np.argmax(score)]}")
     st.write(f"**Confidence:** {100 * np.max(score):.2f}%")
+
