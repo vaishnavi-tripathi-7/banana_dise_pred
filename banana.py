@@ -9,23 +9,24 @@ import os
 # Config: Model file and Drive ID
 # -----------------------------
 MODEL_FILE = "finalbanana.keras"
-GOOGLE_DRIVE_FILE_ID = "1oEORySLbrQMgPpl8JbPlJK6IZ50E66eR"  # Updated Drive file ID
+GOOGLE_DRIVE_FILE_ID = "1oEORySLbrQMgPpl8JbPlJK6IZ50E66eR"  # <-- Your Drive file ID
 
 # -----------------------------
 # Download model if it doesn't exist
 # -----------------------------
 if not os.path.exists(MODEL_FILE):
-    st.info("Downloading model...")
+    st.info("📥 Downloading model from Google Drive...")
     url = f"https://drive.google.com/uc?export=download&id={GOOGLE_DRIVE_FILE_ID}"
     gdown.download(url, MODEL_FILE, quiet=False, fuzzy=True)
 
 # -----------------------------
-# Load model
+# Load model (no rebuilding, direct load)
 # -----------------------------
 try:
     model = tf.keras.models.load_model(MODEL_FILE)
+    st.success("✅ Model loaded successfully!")
 except Exception as e:
-    st.error(f"Failed to load model. Error:\n{e}")
+    st.error(f"❌ Failed to load model. Error:\n{e}")
     st.stop()
 
 # -----------------------------
@@ -55,7 +56,7 @@ if uploaded_file is not None:
     st.image(image, caption="Uploaded Image", use_column_width=True)
 
     # Preprocess the image
-    img_size = (224, 224)
+    img_size = (224, 224)  # Adjust if your model was trained with different size
     img_array = np.array(image.resize(img_size)) / 255.0
     img_array = np.expand_dims(img_array, axis=0)
 
@@ -67,4 +68,3 @@ if uploaded_file is not None:
     st.subheader("Prediction")
     st.write(f"**Class:** {CLASS_NAMES[np.argmax(score)]}")
     st.write(f"**Confidence:** {100 * np.max(score):.2f}%")
-
